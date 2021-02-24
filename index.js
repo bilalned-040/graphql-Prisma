@@ -101,31 +101,37 @@ const resolvers = {
       })
       return comment
     },
-    deleteUser: async (_, {
-      id
-    }, context) => {
-      await prisma.comment.deleteMany({
-        where: { userId: id }
-      })
-      await prisma.user.update({
+    deleteUser: async (_, {id}, context) => {
+      const posts = await prisma.post.findMany({
         where: {
-          id
-        },
-        data: {
-          posts: {
-            deleteMany: {
-              authorId: id,
-            },
-          },
+          authorId: id
         }
       });
-      await prisma.user.delete({
+      const deleteComments = posts.map(({
+        id: postId
+      }) => {
+        return prisma.comment.deleteMany({
+          where: {
+            postId
+          }
+        })
+      })
+      const deletePosts = prisma.post.deleteMany({
+        where: {
+          authorId: id
+        }
+      });
+      const deleteUser = prisma.user.delete({
         where: {
           id
         }
-      })
+      });
+      console.log(...deleteComments, deletePosts, deleteUser)
+      const transaction = await prisma.$transaction([...deleteComments, deletePosts, deleteUser]);
+      console.log(transaction);
       return "User deleted successfully..."
-    }
+    },
+
   },
   Post: {
     async author(parent) {
