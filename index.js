@@ -25,6 +25,7 @@ const typeDefs = gql `
   createComment(text:String!,userId:Int!,postId:Int!):Comment!
   deleteUser(id:Int!): String!
   deletePost(id:Int!): String!
+  deleteComment(id:Int!): String!
   }
   type User{
     id:ID!
@@ -145,6 +146,14 @@ const resolvers = {
       });
       const transaction = await prisma.$transaction([deleteComments, deletePost]);
       return "Post deleted successfully..."
+    },
+    deleteComment: async (_, {id}, context) => {
+      const deleteComment = await prisma.comment.delete({
+        where: {
+          id
+        }
+      });
+      return "Comment deleted successfully..."
     },
 
   },
