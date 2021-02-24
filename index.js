@@ -26,6 +26,7 @@ const typeDefs = gql `
   deleteUser(id:Int!): String!
   deletePost(id:Int!): String!
   deleteComment(id:Int!): String!
+  updateUser(id:Int!,name:String,email:String,age:Int): User!
   }
   type User{
     id:ID!
@@ -155,7 +156,15 @@ const resolvers = {
       });
       return "Comment deleted successfully..."
     },
-
+    updateUser: async (_,data, context) => {
+      const updatedUser= await prisma.user.update({
+        where:{
+          id:data.id
+        },
+        data
+        })
+      return updatedUser
+    }
   },
   Post: {
     async author(parent) {
