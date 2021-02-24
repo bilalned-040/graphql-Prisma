@@ -24,6 +24,7 @@ const typeDefs = gql `
   createPost(title:String!,body:String!,published:Boolean!,authorId:Int!): Post!
   createComment(text:String!,userId:Int!,postId:Int!):Comment!
   deleteUser(id:Int!): String!
+  deletePost(id:Int!): String!
   }
   type User{
     id:ID!
@@ -126,10 +127,24 @@ const resolvers = {
           id
         }
       });
-      console.log(...deleteComments, deletePosts, deleteUser)
+      // console.log(...deleteComments, deletePosts, deleteUser)
       const transaction = await prisma.$transaction([...deleteComments, deletePosts, deleteUser]);
-      console.log(transaction);
+      // console.log(transaction);
       return "User deleted successfully..."
+    },
+    deletePost: async (_, {id}, context) => {
+      const deleteComments = prisma.comment.deleteMany({
+        where: {
+          postId: id
+        }
+      });
+      const deletePost = prisma.post.delete({
+        where: {
+          id
+        }
+      });
+      const transaction = await prisma.$transaction([deleteComments, deletePost]);
+      return "Post deleted successfully..."
     },
 
   },
