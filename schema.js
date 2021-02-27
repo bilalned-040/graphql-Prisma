@@ -1,8 +1,10 @@
-const {gql} = require("apollo-server-express")
+const {
+  gql
+} = require("apollo-server-express")
 
 const typeDefs = gql `
   type Query {
-    users:[User!]!
+    users:[User!]! 
     posts:[Post!]!
     comments:[Comment!]!
     findPost(authorId:Int!):[Post!]
@@ -10,8 +12,10 @@ const typeDefs = gql `
     findComments(postId:Int!):[Comment!]
   }
   type Mutation {
-  createUser(name:String!,email:String!,age:Int): User!
-  createPost(title:String!,body:String!,published:Boolean!,authorId:Int!): Post!
+  signup(email:String!,password:String!,name:String!,age:Int): AuthPayload!
+  login(email: String!, password: String!): AuthPayload!
+  createPost(title:String!,body:String!,published:Boolean!): Post!
+  # signIn(email: String!, password: String!): AuthPayload!
   createComment(text:String!,userId:Int!,postId:Int!):Comment!
   deleteUser(id:Int!): String!
   deletePost(id:Int!): String!
@@ -20,13 +24,19 @@ const typeDefs = gql `
   updatePost(id:Int!,title:String,body:String,published:Boolean): Post!
   updateComment(id:Int!,text:String): Comment!
   }
-  type User{
-    id:ID!
-    name:String!
-    email:String!
-    age:Int
-    posts:[Post!]!
-    comments:[Comment!]!
+  
+
+type User{
+  id:ID!
+  name:String!
+  email:String!
+  age:Int
+  posts:[Post!]!
+  comments:[Comment!]!
+}
+type AuthPayload {
+  token: String!
+  user: User!
 }
 type Post{
     id:ID!
@@ -48,3 +58,9 @@ type Comment {
 `;
 
 module.exports = typeDefs;
+
+// return the payload inside of signIn Mutation
+// return {
+//   token: jwt.sign({ userId }, secretOrPrivateKey || 'secret', { expiresIn: '1h' }),
+//   user: await prisma.user.findUnique({ where: { id: userId }})
+// }

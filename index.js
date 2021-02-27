@@ -10,6 +10,8 @@ const Mutation = require('./resolvers/Mutation')
 const User = require('./resolvers/User')
 const Post = require('./resolvers/Post')
 const Comment = require('./resolvers/Comment')
+const { getUserId } = require('./utils');
+
 
 
 
@@ -22,9 +24,16 @@ const server = new ApolloServer({
       Post,
       Comment
     },
-    context: {
-      prisma,
-    },
+    context: ({ req }) => {
+      return {
+        req,
+        prisma,
+        userId:
+          req && req.headers.authorization
+            ? getUserId(req)
+            : null
+      };
+    }
 });
 
 const app = express();

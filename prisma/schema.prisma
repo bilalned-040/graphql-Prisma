@@ -30,6 +30,7 @@ model User {
   id      Int      @default(autoincrement()) @id
   email   String   @unique
   name    String
+  password String
   age     Int?
   posts   Post[]
   comments Comment[]
