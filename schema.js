@@ -3,26 +3,28 @@ const {
 } = require("apollo-server-express")
 
 const typeDefs = gql `
+  directive @auth on FIELD_DEFINITION
+
   type Query {
-    users:[User!]! 
+    users:[User!]! @auth
     posts:[Post!]!
     comments:[Comment!]!
-    findPost(authorId:Int!):[Post!]
+    findPost:[Post!] @auth
     findUser(email:String!):User
     findComments(postId:Int!):[Comment!]
   }
   type Mutation {
   signup(email:String!,password:String!,name:String!,age:Int): AuthPayload!
   login(email: String!, password: String!): AuthPayload!
-  createPost(title:String!,body:String!,published:Boolean!): Post!
+  createPost(title:String!,body:String!,published:Boolean!): Post! @auth
   # signIn(email: String!, password: String!): AuthPayload!
-  createComment(text:String!,userId:Int!,postId:Int!):Comment!
-  deleteUser(id:Int!): String!
-  deletePost(id:Int!): String!
-  deleteComment(id:Int!): String!
-  updateUser(id:Int!,name:String,email:String,age:Int): User!
-  updatePost(id:Int!,title:String,body:String,published:Boolean): Post!
-  updateComment(id:Int!,text:String): Comment!
+  createComment(text:String!,postId:Int!):Comment! @auth
+  deleteUser(id:Int!): String! @auth
+  deletePost(id:Int!): String! @auth
+  deleteComment(id:Int!): String! @auth
+  updateUser(id:Int!,name:String,email:String,age:Int): User! @auth
+  updatePost(id:Int!,title:String,body:String,published:Boolean): Post! @auth
+  updateComment(id:Int!,text:String): Comment! @auth
   }
   
 

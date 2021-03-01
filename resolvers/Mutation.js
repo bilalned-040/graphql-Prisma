@@ -1,7 +1,16 @@
-const { ApolloError } = require('apollo-server-express')
+const {
+  ApolloError
+} = require('apollo-server-express')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { APP_SECRET, getUserId } = require('../utils')
+const {
+  PrismaClient
+} = require('@prisma/client')
+const prisma = new PrismaClient();
+const {
+  APP_SECRET,
+  getUserId
+} = require('../utils')
 
 const Mutation = {
   // createUser: async (_, data, {
@@ -12,62 +21,105 @@ const Mutation = {
   //   })
   //   return user;
   // },
-  signup: async (parent, data, {prisma}, info) => {
+  signup: async (parent, data, {
+    prisma
+  }, info) => {
     // 1
     const password = await bcrypt.hash(data.password, 10)
-  
+
     // 2
-    const user = await prisma.user.create({ data: { ...data, password } })
-  
+    const user = await prisma.user.create({
+      data: {
+        ...data,
+        password
+      }
+    })
+
     // 3
-    const token = jwt.sign({ userId: user.id }, APP_SECRET)
-  
+    const token = jwt.sign({
+      userId: user.id
+    }, APP_SECRET)
+
     // 4
     return {
       token,
       user,
     }
   },
-  login: async (parent, args, {prisma}, info) => {
+  login: async (parent, args, {
+    prisma
+  }, info) => {
     // 1
-    const user = await prisma.user.findUnique({ where: { email: args.email } })
+    const user = await prisma.user.findUnique({
+      where: {
+        email: args.email
+      }
+    })
     if (!user) {
       throw new Error('No such user found')
     }
-  
+
     // 2
     const valid = await bcrypt.compare(args.password, user.password)
     if (!valid) {
       throw new Error('Invalid password')
     }
-  
-    const token = jwt.sign({ userId: user.id }, APP_SECRET)
-  
+
+    const token = jwt.sign({
+      userId: user.id
+    }, APP_SECRET)
+
     // 3
     return {
       token,
       user,
     }
   },
-  createPost: async (_, args, context) => {
-    const { userId } = context;
-    if (!userId) throw new ApolloError("Session not found")
+  createPost: async (_, data, context) => {
+    const {
+      user
+    } = context.req;
+    // console.log(data)
+    if (!user) throw new ApolloError("Session not found")
 
-    console.log(userId)
-    const post = await context.prisma.post.create({
-      data: {
-        ...args,
-        // title: args.title,
-        // body: args.body,
-        // published:args.published,
-        author: { connect: { id: userId } },
+    data.author = {
+      connect: {
+        id: user.id
       }
+    }
+
+    const post = await prisma.post.create({
+      data
     })
     return post
   },
-  createComment: async (_, data, {
-    prisma
-  }) => {
+  createComment: async (_, {
+    postId,
+    ...data
+  }, context) => {
+    const {
+      user
+    } = context.req;
+    if (!user) throw new ApolloError("Session not found")
+
+    const post = await prisma.post.findUnique({
+      where: {
+        id: postId
+      }
+    })
+    if (!post) throw new ApolloError("Post not found...");
+
+    data.user = {
+      connect: {
+        id: user.id
+      }
+    }
+
+    data.post = {
+      connect: {
+        id: postId
+      }
+    }
     const comment = await prisma.comment.create({
       data
     })
@@ -115,7 +167,8 @@ const Mutation = {
   deletePost: async (_, {
     id
   }, {
-    prisma
+    prisma,
+    userId
   }) => {
     const deleteComments = prisma.comment.deleteMany({
       where: {
